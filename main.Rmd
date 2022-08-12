@@ -1,0 +1,46 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(wesanderson)
+```
+
+```{r}
+load('Z:/PNAB/vendas-dia/vd_2017.Rdata')
+load('data/viagens_naut.Rdata')
+```
+
+```{r}
+viag = viagens %>% 
+  select(data_fin, cfr, codigo_slv) %>% 
+  mutate(amostrado = 1,
+         data_fin = as.POSIXct(data_fin, format = '%Y-%m-%d'),
+         codigo_slv = factor(codigo_slv))
+
+df = vd_2017 %>%
+  left_join(viag, by = c('IDATVEND' = 'data_fin',
+                         'IEMBARCA' = 'cfr',
+                         'IPORTO' = 'codigo_slv')) %>% 
+  mutate(amostrado = factor(case_when(is.na(amostrado) ~ 0,
+                                            T ~ amostrado)))
+```
+
+```{r}
+df %>%
+  filter(EESPECIE == 'HKE') %>% 
+  ggplot() + 
+  geom_boxplot(aes(x = amostrado,
+                   y = VVENDA/QVENDA,
+                   fill = ETAMANHO)) + 
+  theme_classic() + 
+  scale_fill_manual(values = wes_palette("Zissou1"))
+```
+
+```{r}
+save(df, file = 'data/df.Rdata')
+```
+

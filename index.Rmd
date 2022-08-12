@@ -1,0 +1,139 @@
+---
+title: "IPMA"
+output: 
+  flexdashboard::flex_dashboard:
+    theme: lumen
+    # temas: default, cerulean, journal, flatly, darkly, readable, spacelab, 
+      # united, cosmo, lumen, paper, sandstone, simplex, yeti
+    orientation: rows
+    vertical_layout: fill
+    social: ["twitter", "facebook", "menu"]
+    name: 'IPMA'
+    source_code: embed
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard) #front-end
+library(knitr)
+library(DT)
+library(rpivotTable)
+library(ggplot2)
+library(plotly)
+library(dplyr)
+library(openintro)
+library(highcharter)
+library(ggvis)
+library(leaflet) #mapas
+library(sp)
+library(shiny) #interface c user
+library(zoo) #manipular datas
+library(dplyr)
+library(trend)
+
+library(wesanderson)
+```
+
+```{r}
+load('data/df.Rdata')
+```
+
+Global {data-icon="fa-home"}
+================================
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+```{r, eval = T}
+selectInput('EESPECIE',
+            label = 'Filtro por Especie',
+            selected = 'HKE',
+            choices = c(as.character(unique(df$EESPECIE))) %>% sort)
+```
+
+Column {data-width=650}
+--------------------------------
+
+### Grafico sexy
+
+```{r}
+renderPlot({
+p = df %>%
+  filter(EESPECIE == input$EESPECIE) %>% 
+  ggplot() + 
+  geom_boxplot(aes(x = amostrado,
+                   y = VVENDA/QVENDA,
+                   fill = ETAMANHO)) + 
+  theme_classic() + 
+  scale_fill_manual(values = wes_palette("Zissou1"))
+
+p
+})
+```
+
+
+
+
+Amostragem diária {data-icon="fa-home"}
+================================
+
+Column {.sidebar}
+-------------------------------------
+
+### Bicho
+
+```{r, eval = T}
+selectInput('EESPECIE_2',
+            label = 'Especie',
+            selected = 'HKE',
+            choices = c(as.character(unique(df$EESPECIE))) %>% sort)
+
+renderUI({selectInput('LOTA',
+            label = 'Lota',
+            selected = 'MATOSINHOS',
+            choices = c(as.character(unique(df[df$EESPECIE == input$EESPECIE_2,]$PORTO))) %>% sort)})
+
+renderUI({selectInput('DATA',
+            label = 'data',
+            selected = 'MATOSINHOS',
+            choices = c(as.character(unique(df[df$EESPECIE == input$EESPECIE_2 &
+                                                 df$PORTO == input$LOTA & 
+                                                 df$amostrado == 1,]$IDATVEND))) %>% sort)})
+
+
+```
+
+Column {data-width=650}
+-------------------------------------
+
+### Grafico sexy
+
+```{r}
+renderPlot({
+p = df %>%
+  filter(EESPECIE == input$EESPECIE_2 &
+           PORTO == input$LOTA &
+           IDATVEND == as.POSIXct(input$DATA, format = '%Y-%m-%d')) %>% 
+  ggplot() + 
+  geom_boxplot(aes(x = amostrado,
+                   y = VVENDA/QVENDA,
+                   fill = ETAMANHO)) + 
+  theme_classic() + 
+  scale_fill_manual(values = wes_palette("Zissou1")) + 
+  labs(y = 'Oiros por kg')
+
+p
+})
+```
+
+
+
+
+
+
+
+
+
+
+
+
