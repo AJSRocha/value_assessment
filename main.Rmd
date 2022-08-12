@@ -11,6 +11,13 @@ library(wesanderson)
 
 ```{r}
 load('Z:/PNAB/vendas-dia/vd_2017.Rdata')
+load('Z:/PNAB/vendas-dia/vd_2018.Rdata')
+load('Z:/PNAB/vendas-dia/vd_2019.Rdata')
+load('Z:/PNAB/vendas-dia/vd_2020.Rdata')
+load('Z:/PNAB/vendas-dia/vd_2021.Rdata')
+
+vd = rbind(vd_2017,vd_2018, vd_2019, vd_2020, vd_2021)
+
 load('data/viagens_naut.Rdata')
 ```
 
@@ -21,23 +28,14 @@ viag = viagens %>%
          data_fin = as.POSIXct(data_fin, format = '%Y-%m-%d'),
          codigo_slv = factor(codigo_slv))
 
-df = vd_2017 %>%
+df = vd %>%
   left_join(viag, by = c('IDATVEND' = 'data_fin',
                          'IEMBARCA' = 'cfr',
                          'IPORTO' = 'codigo_slv')) %>% 
   mutate(amostrado = factor(case_when(is.na(amostrado) ~ 0,
                                             T ~ amostrado)))
-```
 
-```{r}
-df %>%
-  filter(EESPECIE == 'HKE') %>% 
-  ggplot() + 
-  geom_boxplot(aes(x = amostrado,
-                   y = VVENDA/QVENDA,
-                   fill = ETAMANHO)) + 
-  theme_classic() + 
-  scale_fill_manual(values = wes_palette("Zissou1"))
+rm(list = ls(pattern = 'vd'))
 ```
 
 ```{r}

@@ -32,6 +32,7 @@ library(dplyr)
 library(trend)
 
 library(wesanderson)
+library(RColorBrewer)
 ```
 
 ```{r}
@@ -60,12 +61,16 @@ Column {data-width=650}
 renderPlot({
 p = df %>%
   filter(EESPECIE == input$EESPECIE) %>% 
+  mutate(amostrado = case_when(amostrado == '0' ~ '0 - Não amostrado',
+                                T ~ '1 - Amostrado')) %>% 
   ggplot() + 
   geom_boxplot(aes(x = amostrado,
                    y = VVENDA/QVENDA,
                    fill = ETAMANHO)) + 
   theme_classic() + 
-  scale_fill_manual(values = wes_palette("Zissou1"))
+  # scale_fill_manual(values = wes_palette("Zissou1")) +
+  scale_fill_brewer(palette = 'Set3') +
+  labs(y = 'Oiros por kg', x = '')
 
 p
 })
@@ -86,12 +91,13 @@ Column {.sidebar}
 selectInput('EESPECIE_2',
             label = 'Especie',
             selected = 'HKE',
-            choices = c(as.character(unique(df$EESPECIE))) %>% sort)
+            choices = c(as.character(unique(df$EESPECIE[df$amostrado == 1]))) %>% sort)
 
 renderUI({selectInput('LOTA',
             label = 'Lota',
             selected = 'MATOSINHOS',
-            choices = c(as.character(unique(df[df$EESPECIE == input$EESPECIE_2,]$PORTO))) %>% sort)})
+            choices = c(as.character(unique(df[df$EESPECIE == input$EESPECIE_2 &
+                                                 df$amostrado ==1,]$PORTO))) %>% sort)})
 
 renderUI({selectInput('DATA',
             label = 'data',
@@ -113,14 +119,17 @@ renderPlot({
 p = df %>%
   filter(EESPECIE == input$EESPECIE_2 &
            PORTO == input$LOTA &
-           IDATVEND == as.POSIXct(input$DATA, format = '%Y-%m-%d')) %>% 
+           IDATVEND == as.POSIXct(input$DATA, format = '%Y-%m-%d')) %>%
+  mutate(amostrado = case_when(amostrado == '0' ~ 'Não amostrado',
+                                T ~ 'amostrado')) %>% 
   ggplot() + 
   geom_boxplot(aes(x = amostrado,
                    y = VVENDA/QVENDA,
                    fill = ETAMANHO)) + 
   theme_classic() + 
-  scale_fill_manual(values = wes_palette("Zissou1")) + 
-  labs(y = 'Oiros por kg')
+  # scale_fill_manual(values = wes_palette("Zissou1")) + 
+  scale_fill_brewer(palette = 'Set3') +
+  labs(y = 'Oiros por kg', x = '')
 
 p
 })
